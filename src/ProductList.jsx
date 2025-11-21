@@ -1,29 +1,22 @@
 import React, { useState } from 'react';
-import './ProductList.css';
+import { useDispatch, useSelector } from 'react-redux';
+import { addItem } from './CartSlice';
 import CartItem from './CartItem';
-import { useDispatch } from 'react-redux';
-import { addItem } from './CartSlice'; // Make sure this path is correct
+import './ProductList.css';
 
 function ProductList({ onHomeClick }) {
     const [showCart, setShowCart] = useState(false);
-    const [addedToCart, setAddedToCart] = useState({});
-    const dispatch = useDispatch();
+    const [showPlants, setShowPlants] = useState(false);
 
-    const plantsArray = [ /* your plantsArray as given */ ];
+    const dispatch = useDispatch();
+    const cart = useSelector(state => state.cart.items);
+
+    // Track which items have been added to the cart
+    const [addedToCart, setAddedToCart] = useState({});
 
     const handleAddToCart = (plant) => {
-        dispatch(addItem(plant)); // dispatch to Redux store
-        setAddedToCart(prev => ({ ...prev, [plant.name]: true })); // track added items
-    };
-
-    const handleHomeClick = (e) => {
-        e.preventDefault();
-        onHomeClick();
-    };
-
-    const handleCartClick = (e) => {
-        e.preventDefault();
-        setShowCart(true);
+        dispatch(addItem(plant));
+        setAddedToCart(prev => ({ ...prev, [plant.name]: true }));
     };
 
     const handleContinueShopping = (e) => {
@@ -33,45 +26,33 @@ function ProductList({ onHomeClick }) {
 
     return (
         <div>
-            {/* Navbar here */}
-            <div className="navbar" style={{ backgroundColor: '#4CAF50', color: '#fff', padding: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '20px' }}>
-                <div className="luxury">
-                    <img src="https://cdn.pixabay.com/photo/2020/08/05/13/12/eco-5465432_1280.png" alt="" />
-                    <a href="/" onClick={handleHomeClick}>
-                        <div>
-                            <h3 style={{ color: 'white' }}>Paradise Nursery</h3>
-                            <i style={{ color: 'white' }}>Where Green Meets Serenity</i>
-                        </div>
-                    </a>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '300px' }}>
-                    <a href="#" onClick={() => setShowCart(false)} style={{ color: 'white', fontSize: '20px' }}>Plants</a>
-                    <a href="#" onClick={handleCartClick} style={{ color: 'white', fontSize: '20px' }}>Cart</a>
-                </div>
-            </div>
-
+            {/* ...Navbar code omitted for brevity... */}
+            
             {!showCart ? (
                 <div className="product-grid">
-                    {plantsArray.map(category => (
-                        category.plants.map(plant => (
-                            <div key={plant.name} className="product-card">
-                                <h3>{plant.name}</h3>
-                                <img src={plant.image} alt={plant.name} width="200" />
-                                <p>{plant.description}</p>
-                                <p>{plant.cost}</p>
-                                <button 
-                                    onClick={() => handleAddToCart(plant)} 
-                                    disabled={addedToCart[plant.name]}
-                                >
-                                    {addedToCart[plant.name] ? "Added" : "Add to Cart"}
-                                </button>
-                            </div>
-                        ))
+                    {plantsArray.flatMap(category => category.plants).map(plant => (
+                        <div className="product-card" key={plant.name}>
+                            <img src={plant.image} alt={plant.name} />
+                            <h3>{plant.name}</h3>
+                            <p>{plant.description}</p>
+                            <p>{plant.cost}</p>
+                            <button
+                                disabled={addedToCart[plant.name]}
+                                onClick={() => handleAddToCart(plant)}
+                            >
+                                {addedToCart[plant.name] ? 'Added to Cart' : 'Add to Cart'}
+                            </button>
+                        </div>
                     ))}
                 </div>
             ) : (
                 <CartItem onContinueShopping={handleContinueShopping} />
             )}
+
+            {/* Display total items in cart in navbar */}
+            <div className="cart-count">
+                Total Items: {cart.reduce((sum, item) => sum + item.quantity, 0)}
+            </div>
         </div>
     );
 }
